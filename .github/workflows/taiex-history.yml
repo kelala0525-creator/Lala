@@ -1,0 +1,31 @@
+name: TAIEX historical backfill
+on:
+  workflow_dispatch:
+    inputs:
+      start:
+        description: Start month
+        required: true
+        default: '1990-01'
+      end:
+        description: End month
+        required: true
+        default: '2026-10'
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests
+      - run: python taiex_history/download.py --start "${{ inputs.start }}" --end "${{ inputs.end }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: taiex-historical-daily
+          path: |
+            taiex_history/TAIEX_daily_merged.csv
+            taiex_history/download_status.json
+          retention-days: 30
